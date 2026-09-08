@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rosbag2_storage_rrd</name>
+  <version>0.1.0</version>
+  <description>rosbag2 storage plugin writing Rerun .rrd files, with ROS 2 messages reflection-decoded into Arrow</description>
+  <maintainer email="isaac@rerun.io">Isaac Blankenau</maintainer>
+  <license>MIT OR Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+
+  <depend>pluginlib</depend>
+  <depend>rcutils</depend>
+  <depend>rosbag2_storage</depend>
+
+  <exec_depend>ros2bag</exec_depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>rclcpp</test_depend>
+  <test_depend>std_msgs</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

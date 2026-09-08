@@ -1,0 +1,22 @@
+# Copied from https://github.com/rerun-io/rerun_template
+# The C++ shim is an ament package: CI for it needs a ROS 2 environment (robostack),
+# which is not set up yet. Manual trigger only until then.
+on:
+  workflow_dispatch:
+
+name: C++
+
+jobs:
+  cpp-check:
+    name: C++
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: prefix-dev/setup-pixi@v0.8.8
+        with:
+          pixi-version: v0.77.1
+          cache: true
+
+      - run: pixi run build
+

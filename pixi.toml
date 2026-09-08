@@ -1,0 +1,63 @@
+# Pixi is a package management tool for developers.
+# Before running a task, pixi ensures that all listed dependencies are installed first.
+#
+# Pixi is not required to build the plugin (colcon does that, see the README), but it is a
+# convenient way to install the linting and formatting tools CI runs.
+#
+# https://pixi.sh/latest/
+#
+# Use `pixi task list` to list the available tasks,
+# and `pixi run TASK` to run it (e.g. `pixi run lint-typos`).
+
+[project]
+name = "rosbag2_storage_rrd"
+authors = ["rerun.io <opensource@rerun.io>"]
+channels = ["conda-forge"]
+description = "rosbag2 storage plugin writing Rerun .rrd files"
+homepage = "https://rerun.io"
+license = "MIT OR Apache-2.0"
+
+platforms = ["linux-64", "linux-aarch64", "osx-arm64", "osx-64", "win-64"]
+readme = "README.md"
+repository = "https://github.com/rerun-io/rosbag2_storage_rrd"
+version = "0.1.0"
+
+
+[tasks]
+# ------------------------------------------------------------------------------------------
+# The plugin proper is an ament package: build it with colcon inside a ROS 2 workspace
+# (see the README). The tasks here cover only the Rust core and repo hygiene.
+# The C++ shim follows ROS/ament style, not the rerun clang-format, so no cpp-fmt task.
+
+# Build the Rust core
+build = { cmd = "cargo build --release" }
+
+# ------------------------------------------------------------------------------------------
+# Python stuff:
+
+# Run first ruff fix, then ruff format, order is important see also https://twitter.com/charliermarsh/status/1717229721954799727
+py-fmt = "ruff check --fix --config pyproject.toml . && ruff format --config pyproject.toml ."
+py-fmt-check = "ruff check --config pyproject.toml . && ruff format --check --config pyproject.toml"
+py-lint = "mypy --install-types --non-interactive --no-warn-unused-ignore"
+
+# ------------------------------------------------------------------------------------------
+# General stuff:
+lint-typos = "typos"
+
+
+[dependencies]
+# Python stuff:
+mypy = "1.14.1.*"
+ruff = "0.11.6.*"
+gitpython = ">=3.1.40"
+
+types-requests = ">=2.32,<3" # mypy type hint stubs for generate_changelog.py
+
+# General stuff:
+typos = ">=1.16.20"
+
+[target.linux-64.dependencies]
+sysroot_linux-64 = ">=2.17,<3" # rustc 1.64+ requires glibc 2.17+, see https://blog.rust-lang.org/2022/08/01/Increasing-glibc-kernel-requirements.html
+
+[target.linux-aarch64.dependencies]
+sysroot_linux-aarch64 = ">=2.17,<3" # rustc 1.64+ requires glibc 2.17+, see https://blog.rust-lang.org/2022/08/01/Increasing-glibc-kernel-requirements.html

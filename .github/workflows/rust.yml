@@ -1,0 +1,74 @@
+# Copied from https://github.com/rerun-io/rerun_template
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    types: [ opened, synchronize ]
+
+name: Rust
+
+env:
+  RUSTFLAGS: -D warnings
+  RUSTDOCFLAGS: -D warnings
+
+jobs:
+  rust-check:
+    name: Rust
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: rust-docs, clippy, rustfmt
+          toolchain: 1.96.0
+          override: true
+
+      - uses: prefix-dev/setup-pixi@v0.8.8
+        with:
+          pixi-version: v0.77.1
+
+      - name: Rustfmt
+        run: pixi run cargo fmt --all -- --check
+
+      - name: check --all-features
+        run: pixi run cargo check --all-features --all-targets
+
+      - name: check default features
+        run: pixi run cargo check --all-targets
+
+      - name: check --no-default-features
+        run: pixi run cargo check --no-default-features --all-targets
+
+      # No doc-tests: the one crate is a staticlib, which has no lib target to run them in.
+
+      - name: cargo doc --lib
+        run: pixi run cargo doc --lib --no-deps --all-features
+
+      - name: cargo doc --document-private-items
+        run: pixi run cargo doc --document-private-items --no-deps --all-features
+
+      - name: Build tests
+        run: pixi run cargo build --tests --all-features
+
+      - name: Run test
+        run: pixi run cargo test --all-features
+
+      - name: Clippy
+        run: pixi run cargo clippy --all-targets --all-features -- -D warnings
+
+  # ---------------------------------------------------------------------------
+
+  # ---------------------------------------------------------------------------
+
+  cargo-deny:
+    name: Check Rust dependencies (cargo-deny)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: EmbarkStudios/cargo-deny-action@v2
+      with:
+        rust-version: "1.96.0"
+        log-level: warn
+        command: check

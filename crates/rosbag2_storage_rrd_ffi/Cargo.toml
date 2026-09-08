@@ -1,0 +1,57 @@
+[package]
+authors.workspace = true
+description = "Rust core for the rosbag2 `rrd` storage plugin: ROS 2 reflection decoding to and from Rerun chunks"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "rosbag2_storage_rrd_ffi"
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+version = "0.1.0"
+
+[lints]
+workspace = true
+
+[lib]
+# Statically linked into the C++ pluginlib shim, so there is no second artifact to
+# install and no macOS rpath to fix up.
+crate-type = ["staticlib"]
+
+[dependencies]
+# Pinned to a rerun main commit that has the ROS 2 reflection decoder in re_ros_msg and
+# the ROS 2 image, compressed image, transform, NavSatFix and sensor lenses in re_lenses,
+# none of which are in a release yet. The next crates.io release that contains them
+# replaces these with plain version requirements. To bump: change all four `rev`s, then
+# `cargo update -p rerun -p re_lenses -p re_ros_msg -p re_sdk_types`.
+rerun = { git = "https://github.com/rerun-io/rerun.git", rev = "758cf7f99c5336fda7972a75eb63f154532f8d6e", default-features = false, features = [
+  "sdk",
+] }
+re_lenses = { git = "https://github.com/rerun-io/rerun.git", rev = "758cf7f99c5336fda7972a75eb63f154532f8d6e" }
+re_ros_msg = { git = "https://github.com/rerun-io/rerun.git", rev = "758cf7f99c5336fda7972a75eb63f154532f8d6e" }
+re_sdk_types = { git = "https://github.com/rerun-io/rerun.git", rev = "758cf7f99c5336fda7972a75eb63f154532f8d6e" }
+
+# Must match the Arrow version the Rerun workspace pins, or the array types will not unify.
+arrow = { version = "58.3", default-features = false }
+re_cdr = "0.1.0"
+
+anyhow = "1"
+log = "0.4"
+# The chunk reader is async; this drives it to completion without pulling in a runtime.
+pollster = "1.0"
+serde = { version = "1", features = ["derive"] }
+# The `--storage-config-file` format. `serde_yaml` itself is unmaintained.
+serde_yaml_ng = "0.10"
+# Rerun logs through `tracing` and this crate through `log`; one subscriber catches both
+# and hands every message to the C++ side. Versions match the Rerun workspace pins.
+tracing = "0.1"
+tracing-log = "0.2"
+tracing-subscriber = { version = "0.3", default-features = false, features = [
+  "env-filter",
+  "registry",
+  "std",
+] }
+
+[dev-dependencies]
+parking_lot = "0.12"
+tempfile = "3"

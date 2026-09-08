@@ -1,0 +1,9 @@
+<library path="rosbag2_storage_rrd">
+  <class
+    name="rrd"
+    type="rosbag2_storage_plugins::RrdStorage"
+    base_class_type="rosbag2_storage::storage_interfaces::ReadWriteInterface"
+  >
+    <description>rosbag2 storage plugin writing Rerun .rrd files</description>
+  </class>
+</library>
