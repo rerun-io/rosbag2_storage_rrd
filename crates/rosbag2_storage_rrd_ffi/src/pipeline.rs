@@ -162,6 +162,17 @@ impl Reflection {
             !schema_text.trim().is_empty(),
             "message definition is empty"
         );
+
+        // rosbag2 writes a `.msg` with its top-level block first and a separator line only
+        // before each dependency. A service or action definition is delimited from its
+        // first line, and parsed as a `.msg` it describes the request alone.
+        anyhow::ensure!(
+            !schema_text
+                .lines()
+                .find(|line| !line.trim().is_empty())
+                .is_some_and(re_ros_msg::is_schema_separator),
+            "definition is a delimited interface (.srv or .action), not a .msg"
+        );
         let schema = MessageSchema::parse(type_name, schema_text)
             .context("failed to parse the ROS 2 message definition")?;
         let plan = Arc::new(
@@ -825,6 +836,24 @@ mod tests {
             &[Representation::Lenses],
             "nonexistent_msgs/msg/Mystery",
             b"",
+        );
+        assert!(pipeline.is_replayable());
+        assert_eq!(pipeline.representations(), &reps(&[Representation::Raw]));
+        let chunks = run(&mut pipeline, &strings(&["x"]));
+        assert_eq!(chunks.len(), 1);
+        assert_eq!(forms(&chunks[0]), (Some(1), None));
+    }
+
+    #[test]
+    fn a_service_event_topic_is_kept_raw() {
+        let mut pipeline = pipeline_for(
+            &[Representation::Lenses],
+            "test_msgs/srv/BasicTypes_Event",
+            b"================================================================================\n\
+              SRV: test_msgs/srv/BasicTypes\n\
+              bool request_value\n\
+              ---\n\
+              bool response_value\n",
         );
         assert!(pipeline.is_replayable());
         assert_eq!(pipeline.representations(), &reps(&[Representation::Raw]));
