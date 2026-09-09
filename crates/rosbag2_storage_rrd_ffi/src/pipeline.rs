@@ -152,11 +152,6 @@ impl Reflection {
             "schema encoding '{schema_encoding}' is not '{REFLECTABLE_ENCODING}'"
         );
 
-        anyhow::ensure!(
-            !type_name.contains("/srv/"),
-            "service event definitions are .srv text, not a .msg"
-        );
-
         let schema_text =
             std::str::from_utf8(schema_text).context("message definition is not valid UTF-8")?;
 
@@ -166,6 +161,17 @@ impl Reflection {
         anyhow::ensure!(
             !schema_text.trim().is_empty(),
             "message definition is empty"
+        );
+
+        // rosbag2 writes a `.msg` with its top-level block first and a separator line only
+        // before each dependency. A service or action definition is delimited from its
+        // first line, and parsed as a `.msg` it describes the request alone.
+        anyhow::ensure!(
+            !schema_text
+                .lines()
+                .find(|line| !line.trim().is_empty())
+                .is_some_and(re_ros_msg::is_schema_separator),
+            "definition is a delimited interface (.srv or .action), not a .msg"
         );
         let schema = MessageSchema::parse(type_name, schema_text)
             .context("failed to parse the ROS 2 message definition")?;
@@ -843,7 +849,11 @@ mod tests {
         let mut pipeline = pipeline_for(
             &[Representation::Lenses],
             "test_msgs/srv/BasicTypes_Event",
-            b"bool request_value\n---\nbool response_value\n",
+            b"================================================================================\n\
+              SRV: test_msgs/srv/BasicTypes\n\
+              bool request_value\n\
+              ---\n\
+              bool response_value\n",
         );
         assert!(pipeline.is_replayable());
         assert_eq!(pipeline.representations(), &reps(&[Representation::Raw]));
