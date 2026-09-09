@@ -152,6 +152,11 @@ impl Reflection {
             "schema encoding '{schema_encoding}' is not '{REFLECTABLE_ENCODING}'"
         );
 
+        anyhow::ensure!(
+            !type_name.contains("/srv/"),
+            "service event definitions are .srv text, not a .msg"
+        );
+
         let schema_text =
             std::str::from_utf8(schema_text).context("message definition is not valid UTF-8")?;
 
@@ -825,6 +830,20 @@ mod tests {
             &[Representation::Lenses],
             "nonexistent_msgs/msg/Mystery",
             b"",
+        );
+        assert!(pipeline.is_replayable());
+        assert_eq!(pipeline.representations(), &reps(&[Representation::Raw]));
+        let chunks = run(&mut pipeline, &strings(&["x"]));
+        assert_eq!(chunks.len(), 1);
+        assert_eq!(forms(&chunks[0]), (Some(1), None));
+    }
+
+    #[test]
+    fn a_service_event_topic_is_kept_raw() {
+        let mut pipeline = pipeline_for(
+            &[Representation::Lenses],
+            "test_msgs/srv/BasicTypes_Event",
+            b"bool request_value\n---\nbool response_value\n",
         );
         assert!(pipeline.is_replayable());
         assert_eq!(pipeline.representations(), &reps(&[Representation::Raw]));
