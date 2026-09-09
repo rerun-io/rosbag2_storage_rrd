@@ -24,7 +24,7 @@ use rerun::log::Chunk;
 use rerun::{EntityPath, TimelineName};
 
 use crate::index::ChunkIndex;
-use crate::pipeline::{Columns, RECV_TIMESTAMP, SEND_TIMESTAMP};
+use crate::pipeline::{Columns, RECV_TIMESTAMP, SEND_TIMESTAMP, SEQUENCE_NUMBER};
 use crate::replay;
 use crate::statics::{self, TopicStatics, blob_at, column};
 
@@ -90,23 +90,23 @@ struct ChunkData {
     messages: Option<Arc<StructArray>>,
 }
 
-/// Total order over rows: receive time, then chunk position, then row within the chunk.
+/// Total order over rows: receive time, then write order.
 ///
 /// Messages sharing a timestamp keep the order they were written in, and reverse
 /// playback is an exact mirror of forward.
-type SortKey = (i64, usize, usize);
+type SortKey = (i64, i64);
 
 /// One chunk in the merge window, with a cursor over the rows still to be emitted.
 struct Window {
     topic: usize,
     recv_timestamps: Vec<i64>,
     send_timestamps: Vec<i64>,
+
+    /// Write order of each row across the whole file; the tie-breaker in [`SortKey`].
+    sequence_numbers: Vec<i64>,
     data: ChunkData,
     next: usize,
     rows_reversed: bool,
-
-    /// Where this chunk sits in the recording; the tie-breaker in [`SortKey`].
-    seq: usize,
 }
 
 impl Window {
@@ -122,14 +122,19 @@ impl Window {
     /// The [`SortKey`] of the next row, or `None` once the chunk is drained.
     fn key(&self) -> Option<SortKey> {
         let recv = *self.recv_timestamps.get(self.next)?;
-        Some((recv, self.seq, self.data_row(self.next)))
+        Some((recv, self.sequence_number(self.next)))
     }
 
     /// Rows are held in file order; reverse playback walks them from the end.
     fn reversed(&mut self) {
         self.recv_timestamps.reverse();
         self.send_timestamps.reverse();
+        self.sequence_numbers.reverse();
         self.rows_reversed = true;
+    }
+
+    fn sequence_number(&self, row: usize) -> i64 {
+        self.sequence_numbers.get(row).copied().unwrap_or_default()
     }
 
     /// The row index into the chunk's data for the cursor's current position.
@@ -544,7 +549,7 @@ impl Reader {
 
             self.next_chunk += 1;
 
-            match load_window(&chunk, topic, &self.topics[topic], self.next_chunk - 1) {
+            match load_window(&chunk, topic, &self.topics[topic]) {
                 Ok(Some(mut window)) => {
                     if self.reverse {
                         window.reversed();
@@ -596,7 +601,7 @@ impl Reader {
                 continue;
             };
 
-            if let Some(mut window) = load_window(&chunk, topic, &self.topics[topic], position)? {
+            if let Some(mut window) = load_window(&chunk, topic, &self.topics[topic])? {
                 if self.reverse {
                     window.reversed();
                 }
@@ -729,7 +734,7 @@ impl Reader {
             .copied()
             .unwrap_or(recv_timestamp);
         let data_row = window.data_row(row);
-        let key = (recv_timestamp, window.seq, data_row);
+        let key = (recv_timestamp, window.sequence_number(row));
 
         // The raw bytes where they were kept — exact, and no re-encoding — otherwise the
         // struct. A row has at least one of the two.
@@ -806,14 +811,10 @@ pub struct Message {
 }
 
 /// Turns one chunk into a window over its rows, or `None` if it holds no messages.
-fn load_window(
-    chunk: &Chunk,
-    topic: usize,
-    info: &TopicInfo,
-    seq: usize,
-) -> anyhow::Result<Option<Window>> {
+fn load_window(chunk: &Chunk, topic: usize, info: &TopicInfo) -> anyhow::Result<Option<Window>> {
     let recv_timestamps = times(chunk, RECV_TIMESTAMP).unwrap_or_default();
     let send_timestamps = times(chunk, SEND_TIMESTAMP).unwrap_or_else(|| recv_timestamps.clone());
+    let sequence_numbers = times(chunk, SEQUENCE_NUMBER).unwrap_or_default();
 
     let blobs = column(chunk, info.columns.raw());
     let messages = info
@@ -840,10 +841,10 @@ fn load_window(
         topic,
         recv_timestamps,
         send_timestamps,
+        sequence_numbers,
         data,
         next: 0,
         rows_reversed: false,
-        seq,
     }))
 }
 
@@ -1040,6 +1041,49 @@ mod tests {
         reader.seek(all[3].1).unwrap();
 
         assert_eq!(rows(drain(&mut reader)), all[3..]);
+    }
+
+    /// Two topics stamped with the same receive time replay in the order they were
+    /// written, whichever topic came first at each stamp.
+    #[test]
+    fn messages_sharing_a_timestamp_replay_in_write_order() {
+        let dir = tempfile::tempdir().unwrap();
+        let (path, mut writer) = open_writer(dir.path(), "raw");
+        let chatter = create_chatter(&mut writer);
+        let mystery = writer.create_topic(
+            MYSTERY,
+            "nonexistent_msgs/msg/Mystery",
+            "ros2msg",
+            b"",
+            QOS,
+            TYPE_HASH,
+        );
+        let mut written = Vec::new();
+        for i in 0..MESSAGES {
+            let t = 1_000_000_000 + i64::try_from(i).unwrap() * 1_000_000;
+            let order = if i % 2 == 0 {
+                [chatter, mystery]
+            } else {
+                [mystery, chatter]
+            };
+            for topic in order {
+                writer.write(topic, &cdr_string("x"), t, t).unwrap();
+                written.push((topic, t));
+            }
+        }
+        writer.close().unwrap();
+
+        let mut reader = Reader::open(&path).unwrap();
+        let names = [CHATTER, MYSTERY];
+        let replayed: Vec<_> = drain(&mut reader)
+            .into_iter()
+            .map(|m| (m.topic_name, m.recv_timestamp))
+            .collect();
+        let expected: Vec<_> = written
+            .into_iter()
+            .map(|(topic, t)| (names[topic].to_owned(), t))
+            .collect();
+        assert_eq!(replayed, expected);
     }
 
     /// A recording killed mid-write has no metadata document. How each topic is stored is
