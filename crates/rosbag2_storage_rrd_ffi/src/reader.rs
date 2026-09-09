@@ -474,38 +474,20 @@ impl Reader {
     }
 
     /// Moves the read head to the first message at or after `timestamp`.
-    ///
-    /// Seeking backwards restarts the forward pass, since the decoder only goes one way.
     pub fn seek(&mut self, timestamp: i64) -> anyhow::Result<()> {
-        if self.reverse {
-            // Newest-first: wind past everything later than the target.
-            self.restart()?;
-            self.skip_index_to(timestamp);
-            while let Some((index, row)) = self.next_row()? {
-                let Some(recv_timestamp) = self.window[index].recv_timestamps.get(row).copied()
-                else {
-                    break;
-                };
-                if recv_timestamp <= timestamp {
-                    break;
-                }
-                self.advance(index);
-            }
-            self.position = timestamp;
-            self.cursor = None;
-            return Ok(());
-        }
-
-        if timestamp <= self.position {
-            self.restart()?;
-        }
+        self.restart()?;
         self.skip_index_to(timestamp);
 
         while let Some((index, row)) = self.next_row()? {
             let Some(recv_timestamp) = self.window[index].recv_timestamps.get(row).copied() else {
                 break;
             };
-            if recv_timestamp >= timestamp {
+            let reached = if self.reverse {
+                recv_timestamp <= timestamp
+            } else {
+                recv_timestamp >= timestamp
+            };
+            if reached {
                 break;
             }
             self.advance(index);
@@ -1035,6 +1017,29 @@ mod tests {
                 );
             }
         }
+    }
+
+    /// A forward seek from the middle of a pass must not hand out a chunk that was already
+    /// resident a second time.
+    #[test]
+    fn seeking_forward_mid_pass_replays_each_remaining_message_once() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = record(dir.path(), "raw, reflected");
+        let rows = |messages: Vec<Message>| -> Vec<(String, i64, Vec<u8>)> {
+            messages
+                .into_iter()
+                .map(|m| (m.topic_name, m.recv_timestamp, m.data))
+                .collect()
+        };
+
+        let all = rows(drain(&mut Reader::open(&path).unwrap()));
+
+        let mut reader = Reader::open(&path).unwrap();
+        reader.read_next().unwrap();
+        reader.read_next().unwrap();
+        reader.seek(all[3].1).unwrap();
+
+        assert_eq!(rows(drain(&mut reader)), all[3..]);
     }
 
     /// A recording killed mid-write has no metadata document. How each topic is stored is
