@@ -1,8 +1,7 @@
 version: 2
 
-# Proposes each new Rerun release as one PR, so CI (Rust and the ROS 2 build) shows whether
-# it breaks the plugin. Only the Rerun crates: they are the dependency that moves fastest
-# and the one this plugin is most coupled to.
+# Opens one PR per Rerun release, so CI shows whether it breaks the plugin. Other
+# dependencies are left to the `cargo deny` advisory check.
 updates:
   - package-ecosystem: cargo
     directory: /

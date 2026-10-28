@@ -1,6 +1,5 @@
-# Builds and tests the plugin the way the README tells users to: as an ament package in a
-# ROS 2 workspace, which also covers the C++ shim, linking the Rust core into it, and the
-# pluginlib round trip in `test/`.
+# Builds and tests the plugin as an ament package in a ROS 2 workspace, the way the README
+# says to. Unlike `rust.yml`, this covers the C++ shim and the pluginlib tests in `test/`.
 on:
   push:
     branches:
