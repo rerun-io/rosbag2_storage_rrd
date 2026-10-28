@@ -8,7 +8,7 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    labels: ["dependencies"]
+    labels: ["include in changelog"]
     allow:
       - dependency-name: rerun
       - dependency-name: "re_*"
