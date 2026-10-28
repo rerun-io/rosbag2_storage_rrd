@@ -404,7 +404,7 @@ impl Pipeline {
         };
 
         let mut out = Vec::new();
-        for result in lenses.apply(&chunk, &self.runtime) {
+        for result in lenses.apply(Arc::new(chunk), &self.runtime) {
             match result {
                 Ok(chunk) => out.push(chunk),
                 Err(partial) => {
@@ -496,11 +496,11 @@ impl LensSet {
         self.inputs.contains(&reflected.component)
     }
 
-    fn apply<'a>(
-        &'a self,
-        chunk: &'a Chunk,
-        runtime: &'a Runtime,
-    ) -> impl Iterator<Item = Result<Chunk, LensError>> + 'a {
+    fn apply(
+        &self,
+        chunk: Arc<Chunk>,
+        runtime: &Runtime,
+    ) -> impl Iterator<Item = Result<Chunk, LensError>> + use<> {
         self.lenses.apply(chunk, runtime)
     }
 }

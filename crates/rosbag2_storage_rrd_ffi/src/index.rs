@@ -13,9 +13,10 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use anyhow::Context as _;
+use re_chunk_index::RrdManifest;
 use re_sdk_types::ComponentIdentifier;
 use rerun::EntityPath;
-use rerun::external::re_log_encoding::{self, RrdManifest};
+use rerun::external::re_log_encoding;
 use rerun::log::{Chunk, ChunkId};
 
 /// Timeline the index is ordered by — the same one rosbag2 replays in.

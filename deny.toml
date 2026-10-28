@@ -39,8 +39,6 @@ ignore = [
 [bans]
 # The Rerun SDK's dependency tree carries duplicate transitive versions we do not control.
 multiple-versions = "warn"
-# The rerun crates are pinned to an exact git commit, which cargo-deny counts as a wildcard.
-wildcards = "allow"
 deny = [
   { name = "openssl", reason = "Use rustls" },
   { name = "openssl-sys", reason = "Use rustls" },

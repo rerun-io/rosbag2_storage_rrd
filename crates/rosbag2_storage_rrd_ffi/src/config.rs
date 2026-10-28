@@ -191,7 +191,7 @@ impl RecordingConfig {
             return Ok(config);
         }
 
-        let file: ConfigFile = serde_yaml_ng::from_str(config_yaml)
+        let file: ConfigFile = serde_saphyr::from_str(config_yaml)
             .context("failed to parse the storage config file")?;
         file.apply(&mut config)?;
 
