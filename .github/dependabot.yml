@@ -1,0 +1,20 @@
+version: 2
+
+# Opens one PR per Rerun release, so CI shows whether it breaks the plugin. Other
+# dependencies are left to the `cargo deny` advisory check.
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+    labels: ["include in changelog"]
+    allow:
+      - dependency-name: rerun
+      - dependency-name: "re_*"
+    ignore:
+      # Not part of the Rerun workspace; versioned on its own.
+      - dependency-name: re_cdr
+    groups:
+      # The Rerun crates only build against each other at the same version.
+      rerun:
+        patterns: ["rerun", "re_*"]
