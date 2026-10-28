@@ -32,8 +32,8 @@ ros2 bag record -s rrd
 
 ROS 2 Lyrical, tested on macOS (arm64) and Linux (x86_64, aarch64).
 
-- The viewer must be at least as new as the Rerun version in
-  `crates/rosbag2_storage_rrd_ffi/Cargo.toml` to open the files.
+- Open the files with a viewer at the Rerun version in
+  `crates/rosbag2_storage_rrd_ffi/Cargo.toml` or newer.
 - Not supported: reopening a bag in `APPEND` mode, and `wstring` fields (a definition
   containing one is kept as raw CDR).
 - A topic whose definition cannot be decoded (for example `ros2idl` types) is kept as raw
