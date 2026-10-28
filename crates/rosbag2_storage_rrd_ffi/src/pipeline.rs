@@ -27,6 +27,7 @@ use re_sdk_types::{
     ArchetypeName, ArrowDataType as _, ComponentDescriptor, ComponentIdentifier, components,
 };
 use rerun::EntityPath;
+use rerun::external::arrow;
 use rerun::log::{Chunk, ChunkId, TimeColumn};
 
 use crate::config::{Representation, Representations, Unmatched};

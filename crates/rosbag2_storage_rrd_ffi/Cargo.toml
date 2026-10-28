@@ -28,8 +28,6 @@ re_lenses = "0.40.0"
 re_ros_msg = "0.40.0"
 re_sdk_types = "0.40.0"
 
-# Must match the Arrow version the Rerun workspace pins, or the array types will not unify.
-arrow = { version = "58.3", default-features = false }
 re_cdr = "0.1.0"
 
 anyhow = "1"
