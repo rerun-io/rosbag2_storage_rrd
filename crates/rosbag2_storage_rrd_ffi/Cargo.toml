@@ -37,8 +37,8 @@ log = "0.4"
 # The chunk reader is async; this drives it to completion without pulling in a runtime.
 pollster = "1.0"
 serde = { version = "1", features = ["derive"] }
-# The `--storage-config-file` format. `serde_yaml` itself is unmaintained.
-serde_yaml_ng = "0.10"
+# The `--storage-config-file` format.
+serde-saphyr = "2"
 # Rerun logs through `tracing` and this crate through `log`; one subscriber catches both
 # and hands every message to the C++ side. Versions match the Rerun workspace pins.
 tracing = "0.1"

@@ -33,9 +33,6 @@ version = 2
 ignore = [
   # `paste` is unmaintained; it reaches us through the Rerun SDK, not from this crate.
   "RUSTSEC-2024-0436",
-  # `unsafe-libyaml` is unmaintained; it backs `serde_yaml_ng`, which only parses the
-  # local `--storage-config-file`.
-  "RUSTSEC-2024-0449",
 ]
 
 
