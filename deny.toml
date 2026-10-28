@@ -33,14 +33,15 @@ version = 2
 ignore = [
   # `paste` is unmaintained; it reaches us through the Rerun SDK, not from this crate.
   "RUSTSEC-2024-0436",
+  # `unsafe-libyaml` is unmaintained; it backs `serde_yaml_ng`, which only parses the
+  # local `--storage-config-file`.
+  "RUSTSEC-2024-0449",
 ]
 
 
 [bans]
 # The Rerun SDK's dependency tree carries duplicate transitive versions we do not control.
 multiple-versions = "warn"
-# The rerun crates are pinned to an exact git commit, which cargo-deny counts as a wildcard.
-wildcards = "allow"
 deny = [
   { name = "openssl", reason = "Use rustls" },
   { name = "openssl-sys", reason = "Use rustls" },

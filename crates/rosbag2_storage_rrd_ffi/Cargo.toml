@@ -19,17 +19,14 @@ workspace = true
 crate-type = ["staticlib"]
 
 [dependencies]
-# Pinned to a rerun main commit that has the ROS 2 reflection decoder in re_ros_msg and
-# the ROS 2 image, compressed image, transform, NavSatFix and sensor lenses in re_lenses,
-# none of which are in a release yet. The next crates.io release that contains them
-# replaces these with plain version requirements. To bump: change all four `rev`s, then
-# `cargo update -p rerun -p re_lenses -p re_ros_msg -p re_sdk_types`.
-rerun = { git = "https://github.com/rerun-io/rerun.git", rev = "758cf7f99c5336fda7972a75eb63f154532f8d6e", default-features = false, features = [
+# All Rerun crates move together; bump them in one step.
+rerun = { version = "0.40.0", default-features = false, features = [
   "sdk",
 ] }
-re_lenses = { git = "https://github.com/rerun-io/rerun.git", rev = "758cf7f99c5336fda7972a75eb63f154532f8d6e" }
-re_ros_msg = { git = "https://github.com/rerun-io/rerun.git", rev = "758cf7f99c5336fda7972a75eb63f154532f8d6e" }
-re_sdk_types = { git = "https://github.com/rerun-io/rerun.git", rev = "758cf7f99c5336fda7972a75eb63f154532f8d6e" }
+re_chunk_index = "0.40.0"
+re_lenses = "0.40.0"
+re_ros_msg = "0.40.0"
+re_sdk_types = "0.40.0"
 
 # Must match the Arrow version the Rerun workspace pins, or the array types will not unify.
 arrow = { version = "58.3", default-features = false }

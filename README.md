@@ -32,9 +32,8 @@ ros2 bag record -s rrd
 
 ROS 2 Lyrical, tested on macOS (arm64) and Linux (x86_64, aarch64).
 
-- Rust dependencies are a git pin to a `rerun-io/rerun` main commit until the next Rerun
-  release. The viewer must be at least as new as the pin to open the files. See
-  [Building](#building).
+- The viewer must be at least as new as the Rerun version in
+  `crates/rosbag2_storage_rrd_ffi/Cargo.toml` to open the files.
 - Not supported: reopening a bag in `APPEND` mode, and `wstring` fields (a definition
   containing one is kept as raw CDR).
 - A topic whose definition cannot be decoded (for example `ros2idl` types) is kept as raw
@@ -220,11 +219,6 @@ colcon test  --packages-select rosbag2_storage_rrd
 
 CMake drives `cargo build --release` for the Rust core; a Rust toolchain (see
 `rust-toolchain`) is the only dependency beyond the ROS 2 ones in `package.xml`.
-
-The Rust dependencies are a git pin to a `rerun-io/rerun` main commit until the next Rerun
-release; `crates/rosbag2_storage_rrd_ffi/Cargo.toml` names the rev and how to bump it. A
-viewer at least that new opens the files; install one with
-`cargo install --git https://github.com/rerun-io/rerun.git --rev <rev> rerun-cli`.
 
 Changes are tracked in [CHANGELOG.md](CHANGELOG.md).
 

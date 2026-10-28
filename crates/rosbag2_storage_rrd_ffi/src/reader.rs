@@ -19,8 +19,7 @@ use re_ros_msg::MessageSchema;
 use re_ros_msg::reflection::MessageDecodePlan;
 use re_sdk_types::ComponentIdentifier;
 use rerun::external::re_log_encoding;
-use rerun::external::re_log_types::LogMsg;
-use rerun::log::Chunk;
+use rerun::log::{Chunk, LogMsg};
 use rerun::{EntityPath, TimelineName};
 
 use crate::index::ChunkIndex;
