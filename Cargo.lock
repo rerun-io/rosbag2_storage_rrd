@@ -3616,7 +3616,6 @@ name = "rosbag2_storage_rrd_ffi"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "arrow",
  "log",
  "parking_lot",
  "pollster",

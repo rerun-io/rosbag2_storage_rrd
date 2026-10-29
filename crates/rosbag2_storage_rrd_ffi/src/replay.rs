@@ -14,6 +14,7 @@ use arrow::array::{
 use re_cdr::{CdrWriter, LittleEndian};
 use re_ros_msg::message_spec::{ArraySize, BuiltInType};
 use re_ros_msg::reflection::{MessageDecodePlan, ValueLayout};
+use rerun::external::arrow;
 
 /// Classic CDR, little-endian, options zeroed — what ROS 2 publishes over DDS.
 ///

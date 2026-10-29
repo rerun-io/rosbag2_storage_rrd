@@ -27,6 +27,7 @@ use arrow::datatypes::{DataType, Field, Fields};
 use re_sdk_types::reflection::ComponentDescriptorExt as _;
 use re_sdk_types::{ArchetypeName, ComponentDescriptor, ComponentIdentifier};
 use rerun::EntityPath;
+use rerun::external::arrow;
 use rerun::log::{Chunk, ChunkId};
 
 /// Recording property holding rosbag2's own `BagMetadata`, so the `.rrd` describes itself

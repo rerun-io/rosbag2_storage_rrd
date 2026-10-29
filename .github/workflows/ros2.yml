@@ -1,0 +1,53 @@
+# Builds and tests the plugin as an ament package in a ROS 2 workspace, the way the README
+# says to. Unlike `rust.yml`, this covers the C++ shim and the pluginlib tests in `test/`.
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    types: [ opened, synchronize ]
+
+name: ROS 2
+
+jobs:
+  ros2-lyrical:
+    name: Build and test on Lyrical
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:resolute
+    env:
+      ROS_DISTRO: lyrical
+    defaults:
+      run:
+        shell: bash
+        working-directory: ws
+    steps:
+      - uses: ros-tooling/setup-ros@v0.7
+
+      - uses: actions/checkout@v4
+        with:
+          path: ws/src/rosbag2_storage_rrd
+
+      - name: Install Rust
+        working-directory: ws/src/rosbag2_storage_rrd
+        run: |
+          curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          "$HOME/.cargo/bin/rustup" toolchain install
+
+      - name: Install ROS dependencies
+        run: |
+          apt-get update
+          rosdep update --rosdistro $ROS_DISTRO
+          rosdep install --from-paths src --ignore-src -y --rosdistro $ROS_DISTRO
+
+      - name: Build
+        run: |
+          source "/opt/ros/$ROS_DISTRO/setup.bash"
+          colcon build --packages-select rosbag2_storage_rrd --event-handlers console_cohesion+
+
+      - name: Test
+        run: |
+          source "/opt/ros/$ROS_DISTRO/setup.bash"
+          colcon test --packages-select rosbag2_storage_rrd --event-handlers console_cohesion+
+          colcon test-result --verbose
