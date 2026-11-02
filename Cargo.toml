@@ -11,7 +11,7 @@ homepage = "https://github.com/rerun-io/rosbag2_storage_rrd"
 include = ["LICENSE-APACHE", "LICENSE-MIT", "**/*.rs", "Cargo.toml"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rerun-io/rosbag2_storage_rrd"
-rust-version = "1.96.0"
+rust-version = "1.98.0"
 
 [profile.release]
 # Keeps the staticlib debuggable from the C++ side without a meaningful size cost.

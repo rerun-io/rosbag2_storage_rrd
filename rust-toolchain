@@ -5,6 +5,5 @@
 # to the user in the error, instead of "error: invalid channel name '[toolchain]'".
 
 [toolchain]
-channel = "1.96.0"  # Keep in sync with `rust-version` in Cargo.toml, `msrv` in clippy.toml and .github/workflows/rust.yml
+channel = "1.98.0"  # Keep in sync with `rust-version` in Cargo.toml, `msrv` in clippy.toml and .github/workflows/rust.yml
 components = ["rustfmt", "clippy"]
-
